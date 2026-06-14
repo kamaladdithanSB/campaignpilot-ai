@@ -2,7 +2,11 @@
 
 import { CheckCircle, TrendingUp, Lightbulb, ArrowRight } from 'lucide-react'
 
-export function CampaignSummaryCard() {
+export function CampaignSummaryCard({ metrics }: { metrics?: any }) {
+  const sent = metrics?.sent || 1;
+  const openRate = Math.round(((metrics?.opened || 0) / sent) * 100) || 0;
+  const revenue = (metrics?.clicked || 0) * 15; // Mock $15 per click conversion
+
   return (
     <div className="space-y-6">
       <div>
@@ -23,8 +27,8 @@ export function CampaignSummaryCard() {
               <p className="text-lg font-semibold text-emerald-400">Campaign Complete</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Revenue Generated</p>
-              <p className="text-5xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">$287,450</p>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Estimated Revenue</p>
+              <p className="text-5xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">${revenue.toLocaleString()}</p>
               <p className="text-sm text-muted-foreground mt-2">In influenced revenue from campaign</p>
             </div>
           </div>
@@ -34,10 +38,10 @@ export function CampaignSummaryCard() {
             <div>
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Open Rate Performance</p>
               <div className="flex items-baseline gap-2">
-                <p className="text-3xl font-bold text-foreground">67%</p>
+                <p className="text-3xl font-bold text-foreground">{openRate}%</p>
                 <div className="flex items-center gap-1 text-emerald-400 text-sm font-semibold">
                   <TrendingUp className="w-4 h-4" />
-                  +12%
+                  +{(openRate - 55) > 0 ? (openRate - 55) : 0}%
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-1">vs 55% predicted</p>
@@ -45,10 +49,10 @@ export function CampaignSummaryCard() {
             <div>
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Conversion Rate</p>
               <div className="flex items-baseline gap-2">
-                <p className="text-3xl font-bold text-foreground">8.2%</p>
+                <p className="text-3xl font-bold text-foreground">{Math.round(((metrics?.clicked || 0) / sent) * 100) || 0}%</p>
                 <div className="flex items-center gap-1 text-emerald-400 text-sm font-semibold">
                   <TrendingUp className="w-4 h-4" />
-                  +15%
+                  +5%
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-1">vs 7.1% predicted</p>

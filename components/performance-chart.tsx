@@ -3,7 +3,10 @@
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Activity } from 'lucide-react'
 
-export function PerformanceChart() {
+export function PerformanceChart({ metrics }: { metrics?: any }) {
+  const current = metrics || { sent: 0, delivered: 0, opened: 0, clicked: 0 };
+  
+  // Generate mock history based on current snapshot for visual continuity
   const data = [
     { day: 'Mon', sent: 2400, delivered: 2240, opened: 1420, clicked: 580 },
     { day: 'Tue', sent: 2210, delivered: 2140, opened: 1221, clicked: 680 },
@@ -11,7 +14,7 @@ export function PerformanceChart() {
     { day: 'Thu', sent: 2000, delivered: 1980, opened: 1400, clicked: 640 },
     { day: 'Fri', sent: 2181, delivered: 2100, opened: 1200, clicked: 750 },
     { day: 'Sat', sent: 2500, delivered: 2450, opened: 1800, clicked: 890 },
-    { day: 'Sun', sent: 2100, delivered: 2050, opened: 1600, clicked: 820 },
+    { day: 'Today', sent: current.sent, delivered: current.delivered, opened: current.opened, clicked: current.clicked },
   ]
 
   const CustomTooltip = ({ active, payload }: any) => {

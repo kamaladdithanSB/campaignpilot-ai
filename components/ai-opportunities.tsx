@@ -1,128 +1,108 @@
 'use client'
 
-import { Zap, TrendingUp, Shield, Target, ArrowRight } from 'lucide-react'
+import { Crown, Clock, AlertTriangle, Calendar, DollarSign, Users } from 'lucide-react'
+import type { CustomerSegment } from '@/lib/types'
 
-export function AIOpportunities() {
-  const opportunities = [
-    {
-      title: 'Revenue Recovery',
-      subtitle: 'At-Risk Customers',
-      count: '$89,450',
-      description: 'Recover $89K in at-risk revenue by re-engaging lapsed VIP customers with personalized win-back offers.',
-      icon: TrendingUp,
-      gradient: 'from-emerald-500/20 to-emerald-600/10',
-      iconColor: 'text-emerald-400',
-      borderColor: 'border-emerald-500/20',
-      action: 'Launch Win-Back',
-      actionColor: 'from-emerald-500 to-emerald-600',
-    },
-    {
-      title: 'Churn Prevention',
-      subtitle: 'High-Value Retention',
-      count: '2,841',
-      description: 'Prevent churn of 2,841 high-value customers with proactive engagement before they become inactive.',
-      icon: Shield,
-      gradient: 'from-blue-500/20 to-blue-600/10',
-      iconColor: 'text-blue-400',
-      borderColor: 'border-blue-500/20',
-      action: 'Activate Retention',
-      actionColor: 'from-blue-500 to-blue-600',
-    },
-    {
-      title: 'Upsell Potential',
-      subtitle: 'High-Conversion Segment',
-      count: '$156,230',
-      description: 'Unlock $156K in upsell revenue from customers ready for premium product promotion campaigns.',
-      icon: Zap,
-      gradient: 'from-violet-500/20 to-violet-600/10',
-      iconColor: 'text-violet-400',
-      borderColor: 'border-violet-500/20',
-      action: 'Start Upsell',
-      actionColor: 'from-violet-500 to-violet-600',
-    },
-    {
-      title: 'Frequency Boost',
-      subtitle: 'Purchase Acceleration',
-      count: '3,562',
-      description: 'Increase purchase frequency by 40% for engaged customers using strategic timing and personalization.',
-      icon: Target,
-      gradient: 'from-orange-500/20 to-orange-600/10',
-      iconColor: 'text-orange-400',
-      borderColor: 'border-orange-500/20',
-      action: 'Enable Frequency',
-      actionColor: 'from-orange-500 to-orange-600',
-    },
-  ]
+interface AIOpportunitiesProps {
+  segments?: CustomerSegment[]
+  totalRevenue?: string
+}
+
+const SEGMENT_ICONS: Record<string, typeof Crown> = {
+  'high-value': Crown,
+  'recent-buyers': Clock,
+  'at-risk': AlertTriangle,
+  'weekend-shoppers': Calendar,
+}
+
+const SEGMENT_COLORS: Record<string, { gradient: string; iconColor: string }> = {
+  'high-value': { gradient: 'from-amber-500/20 to-amber-600/10', iconColor: 'text-amber-400' },
+  'recent-buyers': { gradient: 'from-emerald-500/20 to-emerald-600/10', iconColor: 'text-emerald-400' },
+  'at-risk': { gradient: 'from-red-500/20 to-red-600/10', iconColor: 'text-red-400' },
+  'weekend-shoppers': { gradient: 'from-violet-500/20 to-violet-600/10', iconColor: 'text-violet-400' },
+}
+
+export function AIOpportunities({ segments = [], totalRevenue }: AIOpportunitiesProps) {
+  const totalCustomers = segments.reduce((sum, s) => sum + s.customerCount, 0);
+
+  if (segments.length === 0) {
+    return (
+      <div className="p-8 rounded-3xl border border-border/40 bg-card/40 text-center">
+        <p className="text-muted-foreground">Upload customer and order data to discover revenue opportunities.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">AI-Identified Opportunities</h2>
-        <p className="text-muted-foreground mt-1.5 text-sm">Business outcomes the AI recommends you pursue next</p>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-black text-foreground tracking-tight">AI Revenue Opportunities</h2>
+          <p className="text-muted-foreground mt-1 font-medium">
+            {segments.length} actionable segments discovered from your data
+            {totalRevenue ? ` · ${totalRevenue} total revenue` : ''}
+          </p>
+        </div>
+        <div className="px-4 py-2 rounded-xl bg-accent/10 border border-accent/20 flex items-center gap-2">
+          <Users className="w-4 h-4 text-accent" />
+          <span className="text-[10px] font-black text-accent uppercase tracking-widest">
+            {totalCustomers.toLocaleString()} in segments
+          </span>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {opportunities.map((opportunity) => {
-          const Icon = opportunity.icon
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {segments.map((segment) => {
+          const Icon = SEGMENT_ICONS[segment.id] || Crown;
+          const colors = SEGMENT_COLORS[segment.id] || SEGMENT_COLORS['high-value'];
+
           return (
             <div
-              key={opportunity.title}
-              className={`relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-card/80 p-6 overflow-hidden transition-all duration-300 group hover:border-border hover:shadow-lg hover:shadow-accent/5`}
+              key={segment.id}
+              className="relative rounded-3xl border border-border/40 bg-card/40 p-8 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-accent/5 hover:border-accent/30"
             >
-              {/* Gradient background effect */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${opportunity.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-              <div className="absolute bottom-0 left-0 h-1 w-0 group-hover:w-full bg-gradient-to-r from-transparent via-accent/30 to-transparent transition-all duration-300" />
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${colors.gradient} opacity-30`}
+              />
 
-              <div className="relative z-10 space-y-4">
-                {/* Header with icon */}
-                <div className="flex items-start justify-between">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${opportunity.gradient} border ${opportunity.borderColor} group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className={`w-6 h-6 ${opportunity.iconColor}`} />
+              <div className="relative z-10 space-y-5">
+                <div className="flex items-center justify-between">
+                  <div className="p-3 rounded-2xl bg-background border border-border/40">
+                    <Icon className={`w-6 h-6 ${colors.iconColor}`} />
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-bold">
-                    AI Insight
+                  <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-background border border-border/40 text-accent">
+                    {segment.revenuePercent.toFixed(1)}% of revenue
                   </span>
                 </div>
 
-                {/* Content */}
-                <div className="space-y-3">
-                  <div>
-                    <h3 className="text-base font-bold text-foreground">{opportunity.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-1 font-medium">{opportunity.subtitle}</p>
-                  </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground tracking-tight">{segment.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{segment.description}</p>
+                </div>
 
-                  {/* Revenue/impact number */}
-                  <div className="py-3 border-y border-border/40">
-                    <p className="text-2xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
-                      {opportunity.count}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-2xl bg-background/60 border border-border/40">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                      <Users className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Customers</span>
+                    </div>
+                    <p className="text-2xl font-black text-foreground">{segment.customerCount.toLocaleString()}</p>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-background/60 border border-border/40">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                      <DollarSign className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Revenue</span>
+                    </div>
+                    <p className="text-2xl font-black text-foreground">
+                      ${segment.revenueContribution.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">Potential impact</p>
                   </div>
-
-                  {/* Description */}
-                  <p className="text-sm text-foreground/80 leading-relaxed">{opportunity.description}</p>
-
-                  {/* Action button */}
-                  <button className={`w-full mt-4 py-2.5 rounded-lg bg-gradient-to-r ${opportunity.actionColor} text-white font-semibold text-sm flex items-center justify-center gap-2 hover:shadow-lg transition-all duration-300 group-hover:gap-3`}>
-                    {opportunity.action}
-                    <ArrowRight className="w-4 h-4 transition-transform" />
-                  </button>
                 </div>
               </div>
             </div>
-          )
+          );
         })}
       </div>
-
-      {/* Recommendation summary */}
-      <div className="relative rounded-xl border border-accent/30 bg-gradient-to-r from-accent/10 to-primary/5 p-6 overflow-hidden">
-        <div className="absolute -left-20 -bottom-20 w-40 h-40 bg-accent/10 rounded-full blur-2xl" />
-        <div className="relative z-10">
-          <p className="text-sm text-foreground leading-relaxed">
-            <span className="font-bold">AI Recommendation:</span> Execute all four opportunities in parallel. The AI models predict a combined impact of <span className="font-bold text-accent">$532,920</span> in incremental revenue over the next 90 days. Start with Revenue Recovery (highest confidence: 94%) and Churn Prevention (highest urgency) this week.
-          </p>
-        </div>
-      </div>
     </div>
-  )
+  );
 }

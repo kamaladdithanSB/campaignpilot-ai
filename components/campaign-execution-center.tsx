@@ -1,142 +1,274 @@
 'use client'
 
-import { Send, CheckCircle, AlertCircle, Eye, MousePointerClick, ShoppingCart, Zap } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import {
+  Send,
+  CheckCircle,
+  Eye,
+  MousePointerClick,
+  TrendingUp,
+  Activity,
+  Users,
+  Radio,
+  Clock,
+} from 'lucide-react'
 
-export function CampaignExecutionCenter() {
-  const executionMetrics = [
+const SIMULATION_DURATION_MS = 10000
+
+interface CampaignExecutionCenterProps {
+  metrics?: {
+    sent?: number
+    delivered?: number
+    opened?: number
+    clicked?: number
+    revenue?: number
+    conversions?: number
+  }
+  audienceSize?: number
+  expectedRevenue?: number
+  avgOrderValue?: number
+  onSimulationComplete?: () => void
+}
+
+export function CampaignExecutionCenter({
+  metrics,
+  audienceSize = 0,
+  expectedRevenue = 0,
+  avgOrderValue = 45,
+  onSimulationComplete,
+}: CampaignExecutionCenterProps) {
+  const [elapsed, setElapsed] = useState(0)
+  const [statusMessage, setStatusMessage] = useState('Analyzing customer behavior...')
+  const completedRef = useRef(false)
+
+  const audienceCount = audienceSize || metrics?.sent || 0
+  const revenueProjection = Math.max(expectedRevenue, Math.round(audienceCount * avgOrderValue * 0.18))
+  const campaignCost = Math.max(Math.round(audienceCount * 0.08), 250)
+  const roiPercent = Math.max(Math.round(((revenueProjection - campaignCost) / campaignCost) * 100), 0)
+  const conversionRateFinal = Math.min(14, 4 + Math.round((revenueProjection / Math.max(audienceCount, 1)) * 0.04))
+  const conversionsProjection = Math.max(Math.round((audienceCount * conversionRateFinal) / 100), 1)
+
+  const openRate = 32 + Math.min(16, Math.max(0, (elapsed / SIMULATION_DURATION_MS) * 18))
+  const clickRate = 10 + Math.min(12, Math.max(0, (elapsed / SIMULATION_DURATION_MS) * 10))
+  const conversionRate = 4 + Math.min(10, Math.max(0, (elapsed / SIMULATION_DURATION_MS) * 8))
+
+  const progress = Math.min(elapsed / SIMULATION_DURATION_MS, 1)
+
+  useEffect(() => {
+    const start = Date.now()
+    const interval = setInterval(() => {
+      const elapsedMs = Date.now() - start
+      setElapsed(elapsedMs)
+
+      if (elapsedMs < 2500) {
+        setStatusMessage('Analyzing audience and customer behavior...')
+      } else if (elapsedMs < 5500) {
+        setStatusMessage('Predicting campaign performance and engagement...')
+      } else if (elapsedMs < 8500) {
+        setStatusMessage('Estimating revenue impact and optimization...')
+      } else if (elapsedMs < SIMULATION_DURATION_MS) {
+        setStatusMessage('Finalizing the campaign summary...')
+      } else {
+        setStatusMessage('Simulation complete — review the recommendation below.')
+        if (!completedRef.current) {
+          completedRef.current = true
+          onSimulationComplete?.()
+        }
+      }
+    }, 50)
+
+    return () => clearInterval(interval)
+  }, [audienceCount, onSimulationComplete])
+
+  const stageSets = [
     {
-      label: 'Queued',
-      value: 2145,
-      percentage: 5,
-      icon: Send,
-      color: 'from-blue-500/20 to-blue-600/10',
-      iconColor: 'text-blue-400',
-      barColor: 'from-blue-500 to-blue-600',
+      title: 'Analyzing Audience',
+      active: progress < 0.25,
+      details: [
+        { label: 'Segment', value: 'High-value shoppers' },
+        { label: 'Customer count', value: audienceCount.toLocaleString() },
+        { label: 'Revenue contribution', value: `$${Math.round(revenueProjection * 0.22).toLocaleString()}` },
+      ],
     },
     {
-      label: 'Delivered',
-      value: 42089,
-      percentage: 93,
-      icon: CheckCircle,
-      color: 'from-emerald-500/20 to-emerald-600/10',
-      iconColor: 'text-emerald-400',
-      barColor: 'from-emerald-500 to-emerald-600',
+      title: 'Predicting Campaign Performance',
+      active: progress >= 0.25 && progress < 0.55,
+      details: [
+        { label: 'Expected open rate', value: `${openRate.toFixed(1)}%` },
+        { label: 'Expected click rate', value: `${clickRate.toFixed(1)}%` },
+        { label: 'Expected conversion rate', value: `${conversionRate.toFixed(1)}%` },
+      ],
     },
     {
-      label: 'Failed',
-      value: 96,
-      percentage: 2,
-      icon: AlertCircle,
-      color: 'from-red-500/20 to-red-600/10',
-      iconColor: 'text-red-400',
-      barColor: 'from-red-500 to-red-600',
+      title: 'Estimating Revenue Impact',
+      active: progress >= 0.55 && progress < 0.85,
+      details: [
+        { label: 'Estimated revenue', value: `$${revenueProjection.toLocaleString()}` },
+        { label: 'Campaign cost', value: `$${campaignCost.toLocaleString()}` },
+        { label: 'Expected ROI', value: `${roiPercent}%` },
+      ],
     },
     {
-      label: 'Opened',
-      value: 28156,
-      percentage: 67,
-      icon: Eye,
-      color: 'from-cyan-500/20 to-cyan-600/10',
-      iconColor: 'text-cyan-400',
-      barColor: 'from-cyan-500 to-cyan-600',
-    },
-    {
-      label: 'Clicked',
-      value: 12742,
-      percentage: 45,
-      icon: MousePointerClick,
-      color: 'from-violet-500/20 to-violet-600/10',
-      iconColor: 'text-violet-400',
-      barColor: 'from-violet-500 to-violet-600',
-    },
-    {
-      label: 'Converted',
-      value: 3892,
-      percentage: 31,
-      icon: ShoppingCart,
-      color: 'from-orange-500/20 to-orange-600/10',
-      iconColor: 'text-orange-400',
-      barColor: 'from-orange-500 to-orange-600',
+      title: 'Final Simulation Summary',
+      active: progress >= 0.85,
+      details: [
+        { label: 'Selected audience', value: `${audienceCount.toLocaleString()} customers` },
+        { label: 'Expected reach', value: `${Math.max(Math.round(audienceCount * 0.95), 0).toLocaleString()}` },
+        { label: 'Revenue projection', value: `$${revenueProjection.toLocaleString()}` },
+        { label: 'Risk level', value: roiPercent >= 80 ? 'Low' : roiPercent >= 50 ? 'Moderate' : 'Managed' },
+      ],
     },
   ]
 
+  const funnelCards = [
+    { label: 'Audience', value: audienceCount, pct: 100, icon: Users, color: 'text-accent', bg: 'bg-accent/10', bar: 'bg-accent' },
+    { label: 'Sent', value: Math.max(Math.round(audienceCount * Math.min(progress, 1)), 0), pct: audienceCount > 0 ? Math.round(Math.min(progress, 1) * 100) : 0, icon: Send, color: 'text-cyan-400', bg: 'bg-cyan-500/10', bar: 'bg-cyan-500' },
+    { label: 'Opened', value: Math.max(Math.round(audienceCount * (openRate / 100) * Math.min(progress, 1)), 0), pct: audienceCount > 0 ? Math.round(openRate) : 0, icon: Eye, color: 'text-blue-400', bg: 'bg-blue-500/10', bar: 'bg-blue-500' },
+    { label: 'Clicked', value: Math.max(Math.round(audienceCount * (clickRate / 100) * Math.min(progress, 1)), 0), pct: audienceCount > 0 ? Math.round(clickRate) : 0, icon: MousePointerClick, color: 'text-violet-400', bg: 'bg-violet-500/10', bar: 'bg-violet-500' },
+  ]
+
   return (
-    <div className="space-y-6">
-      <div>
-        <div className="flex items-center gap-2 mb-2">
-          <Zap className="w-5 h-5 text-accent" />
-          <h2 className="text-2xl font-bold text-foreground">Campaign Execution Center</h2>
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-[10px] font-black uppercase tracking-widest">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              Live simulation
+            </div>
+            <h2 className="text-3xl font-black text-foreground tracking-tighter">Campaign Simulation</h2>
+          </div>
+          <p className="text-muted-foreground text-lg font-medium flex items-center gap-2">
+            <Radio className="w-4 h-4 text-accent animate-pulse" />
+            {statusMessage}
+          </p>
         </div>
-        <p className="text-muted-foreground text-sm">Real-time delivery metrics across channels</p>
+        <div className="flex items-center gap-4 p-4 rounded-2xl bg-secondary/30 border border-border/40">
+          <Clock className="w-5 h-5 text-muted-foreground" />
+          <div>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Elapsed</p>
+            <p className="text-sm font-bold text-foreground">{(elapsed / 1000).toFixed(1)}s / 10s</p>
+          </div>
+          <div className="w-24 h-2 bg-secondary rounded-full overflow-hidden">
+            <div className="h-full bg-accent transition-all duration-100" style={{ width: `${progress * 100}%` }} />
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {executionMetrics.map((metric) => {
-          const Icon = metric.icon
-          return (
-            <div
-              key={metric.label}
-              className="relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-card/80 p-6 overflow-hidden hover:border-border transition-all duration-300 group"
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br ${metric.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+      <div className="rounded-3xl border border-border/40 bg-card/40 p-6">
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4">Simulation progress</p>
+        <div className="grid gap-4 md:grid-cols-4">
+          {stageSets.map((stage, index) => {
+            const stageProgress = progress >= (index + 1) * 0.25
+            return (
+              <div key={stage.title} className={`rounded-3xl p-4 border ${stage.active ? 'border-accent/30 bg-accent/10 shadow-accent/10' : stageProgress ? 'border-success/30 bg-success/10' : 'border-border/30 bg-background/80'}`}>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Step {index + 1}</p>
+                <p className={`mt-3 text-sm font-bold ${stage.active ? 'text-accent' : stageProgress ? 'text-success' : 'text-muted-foreground'}`}>{stage.title}</p>
+              </div>
+            )
+          })}
+        </div>
+      </div>
 
-              <div className="relative z-10 space-y-4">
-                {/* Header */}
-                <div className="flex items-start justify-between">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${metric.color} border border-border/40 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className={`w-6 h-6 ${metric.iconColor}`} />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{metric.label}</p>
-                  </div>
-                </div>
-
-                {/* Value */}
+      <div className="grid gap-6 lg:grid-cols-4">
+        <div className="lg:col-span-3 space-y-4">
+          {stageSets.map((stage) => (
+            <div key={stage.title} className={`rounded-3xl border p-6 transition-all ${stage.active ? 'border-accent/30 bg-accent/10 shadow-xl shadow-accent/10' : 'border-border/40 bg-card/40'}`}>
+              <div className="flex items-center justify-between gap-4 mb-5">
                 <div>
-                  <p className="text-3xl font-bold text-foreground">{metric.value.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground mt-1">{metric.percentage}% of campaign</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Stage</p>
+                  <h3 className="text-2xl font-black text-foreground mt-2">{stage.title}</h3>
                 </div>
-
-                {/* Progress Bar */}
-                <div className="space-y-2">
-                  <div className="w-full h-2 rounded-full bg-border/40 overflow-hidden">
-                    <div
-                      className={`h-full bg-gradient-to-r ${metric.barColor} transition-all duration-500`}
-                      style={{ width: `${metric.percentage}%` }}
-                    />
+                {stage.active && <span className="text-[10px] font-black uppercase tracking-widest text-accent">In progress</span>}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {stage.details.map((detail) => (
+                  <div key={detail.label} className="rounded-3xl bg-background/90 border border-border/40 p-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{detail.label}</p>
+                    <p className="text-lg font-black text-foreground mt-2">{detail.value}</p>
                   </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="space-y-6">
+          <div className="rounded-[32px] border border-border/40 bg-gradient-to-br from-background to-card/90 p-6 shadow-xl">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Simulation summary</p>
+            <div className="space-y-4">
+              <div className="rounded-3xl bg-card/40 border border-border/40 p-5">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Revenue projection</p>
+                <p className="text-4xl font-black text-foreground mt-3">${revenueProjection.toLocaleString()}</p>
+              </div>
+              <div className="rounded-3xl bg-card/40 border border-border/40 p-5">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Projected conversions</p>
+                <p className="text-4xl font-black text-foreground mt-3">{conversionsProjection.toLocaleString()}</p>
+              </div>
+              <div className="rounded-3xl bg-accent/10 border border-accent/20 p-5">
+                <p className="text-[10px] font-black uppercase tracking-widest text-accent">Predicted ROI</p>
+                <p className="text-5xl font-black text-foreground mt-3">{roiPercent}%</p>
+                <p className="text-sm text-muted-foreground mt-2">Calculated from campaign cost and projected revenue.</p>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-3xl border border-border/40 bg-card/40 p-6">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Risk profile</p>
+            <div className="flex items-start gap-4">
+              <div className="rounded-3xl bg-emerald-500/10 p-3 text-emerald-400">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-bold text-foreground">{roiPercent >= 80 ? 'Low risk' : roiPercent >= 50 ? 'Moderate risk' : 'Managed risk'}</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  The model is using segment behavior and campaign reach to make a recommendation that is tuned for your current objective.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {funnelCards.map((card) => {
+          const Icon = card.icon
+          return (
+            <div key={card.label} className="p-6 rounded-3xl bg-card/40 border border-border/40">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className={`p-3 rounded-xl ${card.bg} ${card.color}`}>
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <span className="text-lg font-black text-foreground/20">{card.pct}%</span>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">{card.label}</p>
+                  <p className="text-3xl font-black text-foreground tracking-tighter tabular-nums">{card.value.toLocaleString()}</p>
+                </div>
+                <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                  <div className={`h-full ${card.bar} transition-all duration-150`} style={{ width: `${Math.min(card.pct, 100)}%` }} />
                 </div>
               </div>
-
-              {/* Bottom accent line */}
-              <div className="absolute bottom-0 left-0 h-1 w-0 group-hover:w-full bg-gradient-to-r from-accent/30 via-accent/50 to-transparent transition-all duration-300" />
             </div>
           )
         })}
       </div>
 
-      {/* Summary Stats */}
-      <div className="relative rounded-xl border border-accent/30 bg-gradient-to-r from-accent/10 to-primary/5 p-6 overflow-hidden">
-        <div className="absolute -right-20 -top-20 w-40 h-40 bg-accent/10 rounded-full blur-2xl" />
-        <div className="relative z-10 space-y-3">
-          <h3 className="font-bold text-foreground">Campaign Performance Summary</h3>
-          <div className="grid grid-cols-3 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Open Rate</p>
-              <p className="text-2xl font-bold text-foreground">67%</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Click Rate</p>
-              <p className="text-2xl font-bold text-foreground">45%</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Conversion</p>
-              <p className="text-2xl font-bold text-foreground">31%</p>
-            </div>
-          </div>
-          <p className="text-sm text-foreground/80 mt-4">The campaign is actively delivering. Real-time metrics update as messages are sent, opened, and converted. All channels are performing within predicted parameters.</p>
+      {progress < 1 && (
+        <div className="p-5 rounded-2xl bg-accent/5 border border-accent/20 flex items-center gap-3">
+          <Activity className="w-5 h-5 text-accent animate-pulse" />
+          <p className="text-sm text-muted-foreground font-medium">
+            Campaign running — {Math.max(Math.round(audienceCount * Math.min(progress, 1)), 0).toLocaleString()} of {audienceCount.toLocaleString()} messages simulated...
+          </p>
         </div>
-      </div>
+      )}
     </div>
   )
+}
+
+function easeOut(t: number, start: number, end: number): number {
+  if (t <= start) return 0
+  if (t >= end) return 1
+  const local = (t - start) / (end - start)
+  return 1 - Math.pow(1 - local, 3)
 }

@@ -1,0 +1,16 @@
+email,amount,order_date
+alice@retail.com,250.00,2026-05-15
+alice@retail.com,180.00,2026-06-01
+bob@retail.com,95.50,2026-06-08
+carol@retail.com,420.00,2026-03-10
+carol@retail.com,310.00,2026-04-20
+dave@retail.com,75.00,2026-01-05
+emma@retail.com,155.00,2026-06-05
+emma@retail.com,89.00,2026-05-28
+frank@retail.com,520.00,2026-02-14
+frank@retail.com,380.00,2026-03-22
+grace@retail.com,45.00,2026-06-07
+henry@retail.com,120.00,2026-05-30
+henry@retail.com,95.00,2026-06-02
+alice@retail.com,65.00,2026-06-07
+bob@retail.com,110.00,2026-06-09

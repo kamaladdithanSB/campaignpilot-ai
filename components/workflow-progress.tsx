@@ -1,112 +1,101 @@
 'use client'
 
-import { CheckCircle2, Circle, ArrowRight } from 'lucide-react'
+import { CheckCircle2, Database, Search, Brain, Rocket, BarChart3 } from 'lucide-react'
 
-export function WorkflowProgress() {
+interface WorkflowProgressProps {
+  currentStep: number
+}
+
+export function WorkflowProgress({ currentStep }: WorkflowProgressProps) {
   const stages = [
-    { name: 'Goal', status: 'completed', description: 'Define outcome' },
-    { name: 'Audience', status: 'completed', description: 'Target segment' },
-    { name: 'Message', status: 'completed', description: 'Craft copy' },
-    { name: 'Channel', status: 'active', description: 'Select medium' },
-    { name: 'Launch', status: 'pending', description: 'Go live' },
-    { name: 'Insights', status: 'pending', description: 'Analyze results' },
-  ]
+    { id: 1, label: 'Upload Data', icon: Database, description: 'Connect your CSV' },
+    { id: 2, label: 'Find Opportunities', icon: Search, description: 'AI discovers segments' },
+    { id: 3, label: 'AI Explains', icon: Brain, description: 'Review strategy' },
+    { id: 4, label: 'Simulate Launch', icon: Rocket, description: 'Live campaign' },
+    { id: 5, label: 'View ROI', icon: BarChart3, description: 'Results & next steps' },
+  ];
 
   return (
-    <div className="relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-card/80 p-6 md:p-8 overflow-hidden">
-      {/* Background accent */}
-      <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-transparent opacity-50" />
+    <div className="relative">
+      <div className="hidden md:flex items-center justify-between gap-4 p-8 rounded-3xl border border-border/40 bg-card/40 backdrop-blur-md shadow-xl">
+        {stages.map((stage, index) => {
+          const Icon = stage.icon;
+          const isActive = currentStep === stage.id;
+          const isCompleted = currentStep > stage.id;
+          const isUpcoming = currentStep < stage.id;
 
-      <div className="relative z-10 space-y-6">
-        {/* Header */}
-        <div>
-          <h2 className="text-xl font-bold text-foreground">Campaign Workflow</h2>
-          <p className="text-muted-foreground text-sm mt-1.5">Step 4 of 6 · Channel Selection in Progress</p>
-        </div>
-
-        {/* Progress steps */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between gap-2">
-            {stages.map((stage, index) => (
-              <div key={stage.name} className="flex items-center gap-0">
-                {/* Stage indicator */}
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                      stage.status === 'completed'
-                        ? 'border-accent bg-accent text-accent-foreground'
-                        : stage.status === 'active'
-                          ? 'border-accent bg-accent/20 text-accent'
-                          : 'border-border/40 bg-card text-muted-foreground'
-                    }`}
-                  >
-                    {stage.status === 'completed' ? (
-                      <CheckCircle2 className="w-5 h-5" />
-                    ) : stage.status === 'active' ? (
-                      <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                    ) : (
-                      <Circle className="w-5 h-5" />
-                    )}
-                  </div>
-                  <p className="text-xs font-semibold text-foreground mt-2 whitespace-nowrap">{stage.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{stage.description}</p>
+          return (
+            <div key={stage.id} className="flex flex-1 items-center gap-4 group">
+              <div className="flex items-center gap-4 relative">
+                <div
+                  className={`
+                  w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 border-2
+                  ${isActive ? 'bg-accent text-accent-foreground border-accent scale-110 shadow-lg shadow-accent/20' : ''}
+                  ${isCompleted ? 'bg-success/20 text-success border-success/40' : ''}
+                  ${isUpcoming ? 'bg-secondary/40 text-muted-foreground border-border/40' : ''}
+                `}
+                >
+                  {isCompleted ? <CheckCircle2 className="w-7 h-7" /> : <Icon className="w-7 h-7" />}
                 </div>
 
-                {/* Connector line */}
-                {index < stages.length - 1 && (
-                  <div
-                    className={`flex-1 h-1 mx-1 md:mx-2 rounded-full transition-all duration-300 ${
-                      stage.status === 'completed'
-                        ? 'bg-gradient-to-r from-accent to-accent'
-                        : 'bg-gradient-to-r from-border/40 to-border/20'
-                    }`}
-                    style={{ minWidth: '20px' }}
-                  />
-                )}
+                <div className="flex flex-col">
+                  <span
+                    className={`text-[10px] font-black uppercase tracking-widest leading-none mb-1 ${isActive ? 'text-accent' : 'text-muted-foreground'}`}
+                  >
+                    Step {stage.id}
+                  </span>
+                  <span
+                    className={`text-sm font-bold whitespace-nowrap tracking-tight ${isActive ? 'text-foreground' : 'text-muted-foreground/60'}`}
+                  >
+                    {stage.label}
+                  </span>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Current step details */}
-        <div className="mt-8 pt-6 border-t border-border/40 space-y-4">
-          <div>
-            <h3 className="font-bold text-foreground flex items-center gap-2">
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-accent/20 text-accent text-xs font-bold">
-                4
-              </span>
-              Channel Selection
-            </h3>
-            <p className="text-sm text-muted-foreground mt-2">
-              The AI has identified the most effective channels for reaching your audience. Email dominates with 92% engagement, while SMS provides rapid re-engagement for time-sensitive offers.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-lg bg-card/40 border border-border/40 hover:border-accent/40 transition-all">
-              <p className="text-xs font-bold text-accent uppercase tracking-wider mb-1">Primary Channel</p>
-              <p className="text-sm font-semibold text-foreground">Email</p>
-              <p className="text-xs text-muted-foreground mt-1">92% engagement rate</p>
+              {index < stages.length - 1 && (
+                <div className="flex-1 px-4">
+                  <div
+                    className={`h-1 rounded-full transition-all duration-1000 ${isCompleted ? 'bg-success/30' : 'bg-border/20'}`}
+                  >
+                    <div
+                      className="h-full bg-accent rounded-full transition-all duration-1000"
+                      style={{ width: isCompleted ? '100%' : '0%' }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="p-3 rounded-lg bg-card/40 border border-border/40 hover:border-accent/40 transition-all">
-              <p className="text-xs font-bold text-accent uppercase tracking-wider mb-1">Secondary Channel</p>
-              <p className="text-sm font-semibold text-foreground">SMS</p>
-              <p className="text-xs text-muted-foreground mt-1">78% open rate</p>
-            </div>
-          </div>
+          );
+        })}
+      </div>
 
-          {/* Action buttons */}
-          <div className="flex gap-3 pt-2">
-            <button className="flex-1 py-2.5 rounded-lg bg-accent/10 hover:bg-accent/20 border border-accent/30 hover:border-accent/60 text-accent font-semibold text-sm transition-all duration-300">
-              Review Channels
-            </button>
-            <button className="flex-1 py-2.5 rounded-lg bg-gradient-to-r from-accent to-primary text-accent-foreground font-semibold text-sm hover:shadow-lg hover:shadow-accent/20 transition-all duration-300 flex items-center justify-center gap-2">
-              Continue
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+      <div className="md:hidden flex items-center justify-between p-6 rounded-2xl border border-border/40 bg-card/40 backdrop-blur-md">
+        {stages.map((stage) => {
+          const isActive = currentStep === stage.id;
+          const isCompleted = currentStep > stage.id;
+          if (!isActive && !isCompleted && stage.id !== currentStep + 1) return null;
+
+          return (
+            <div key={stage.id} className={`flex items-center gap-3 ${isActive ? 'flex-1' : ''}`}>
+              <div
+                className={`
+                w-10 h-10 rounded-xl flex items-center justify-center transition-all
+                ${isActive ? 'bg-accent text-accent-foreground border-2 border-accent' : ''}
+                ${isCompleted ? 'bg-success/20 text-success' : 'bg-secondary/40 text-muted-foreground'}
+              `}
+              >
+                {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <stage.icon className="w-5 h-5" />}
+              </div>
+              {isActive && (
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black uppercase tracking-tight text-accent">Active</span>
+                  <span className="text-xs font-bold text-foreground">{stage.label}</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
-  )
+  );
 }

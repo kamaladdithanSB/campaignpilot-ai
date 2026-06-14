@@ -1,129 +1,175 @@
 'use client'
 
-import { useState } from 'react'
-import { Sparkles, ArrowRight, Zap, Brain } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Sparkles, ArrowRight, Brain, Loader2, Database, Search, AlertCircle } from 'lucide-react'
 
 interface AIHeroProps {
-  onLaunchStrategy?: () => void
+  onAnalyze?: (prompt: string) => void
+  hasData?: boolean
+  isAnalyzing?: boolean
+  isGenerating?: boolean
+  loadingStage?: 'goal' | 'audience' | 'content' | null
+  initialPrompt?: string
+  error?: string | null
 }
 
-export function AIHero({ onLaunchStrategy }: AIHeroProps = {}) {
-  const [prompt, setPrompt] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+export function AIHero({
+  onAnalyze,
+  hasData = false,
+  isAnalyzing = false,
+  isGenerating = false,
+  loadingStage = null,
+  initialPrompt = '',
+  error = null,
+}: AIHeroProps) {
+  const [prompt, setPrompt] = useState(initialPrompt)
+  const busy = isAnalyzing || isGenerating
+
+  useEffect(() => {
+    if (initialPrompt) setPrompt(initialPrompt)
+  }, [initialPrompt])
 
   const quickSuggestions = [
-    { icon: '📈', label: 'Increase repeat purchases', desc: 'AI-optimized loyalty strategies' },
-    { icon: '🔄', label: 'Win back inactive customers', desc: 'Predictive re-engagement' },
-    { icon: '📅', label: 'Boost weekend sales', desc: 'Temporal optimization' },
-    { icon: '✨', label: 'Promote premium products', desc: 'Smart upsell pathways' },
+    { icon: '📅', label: 'Boost weekend sales', segment: 'Weekend Shoppers' },
+    { icon: '🔄', label: 'Win back inactive customers', segment: 'At-Risk Customers' },
+    { icon: '📈', label: 'Increase average order value', segment: 'High Value Customers' },
+    { icon: '✨', label: 'Promote new products', segment: 'Recent Buyers' },
   ]
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (prompt.trim()) {
-      setIsLoading(true)
-      setTimeout(() => {
-        setIsLoading(false)
-        setPrompt('')
-        onLaunchStrategy?.()
-      }, 1200)
+    console.log("DEBUG: AIHero - handleSubmit called", { prompt, hasData, busy });
+    if (prompt.trim() && hasData && !busy) {
+      console.log("DEBUG: AIHero - calling onAnalyze...");
+      onAnalyze?.(prompt)
+    } else {
+      console.log("DEBUG: AIHero - handleSubmit validation failed", { promptTrim: prompt.trim(), hasData, busy });
     }
   }
 
   return (
     <div className="space-y-10">
-      {/* Premium AI Header with Gradient Background */}
-      <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-accent/5 via-primary/3 to-background p-8 md:p-12 backdrop-blur-xl">
-        {/* Animated gradient orbs */}
-        <div className="absolute -right-40 -top-40 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-pulse opacity-40" />
-        <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-primary/10 rounded-full blur-3xl animate-pulse opacity-30" style={{ animationDelay: '1s' }} />
+      <div className="relative overflow-hidden rounded-3xl border border-border/40 bg-gradient-to-br from-accent/10 via-primary/5 to-background p-8 md:p-14 backdrop-blur-2xl shadow-2xl shadow-accent/5">
+        <div className="absolute -right-40 -top-40 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse opacity-40" />
+        <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-primary/20 rounded-full blur-3xl animate-pulse opacity-30" style={{ animationDelay: '1.5s' }} />
 
-        <div className="relative z-10 space-y-6">
-          {/* AI Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/30 backdrop-blur-sm">
+        <div className="relative z-10 space-y-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/30 backdrop-blur-md">
             <Brain className="w-4 h-4 text-accent" />
-            <span className="text-sm font-semibold text-accent">AI-Powered Intelligence</span>
+            <span className="text-xs font-bold text-accent uppercase tracking-widest">AI Revenue Copilot</span>
           </div>
 
-          {/* Main Heading */}
-          <div className="space-y-3">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-balance leading-tight text-foreground">
-              Tell me the outcome you want.
-              <br className="hidden sm:block" />
-              <span className="bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
-                CampaignPilot handles the strategy.
-              </span>
+          <div className="space-y-4">
+            <h1 className="text-4xl md:text-5xl font-black text-balance leading-[1.1] text-foreground tracking-tighter">
+              Tell us your goal. We&apos;ll show you why before we build.
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl leading-relaxed">
-              Describe what customer behavior you&apos;d like to change, and let AI build a hyper-personalized campaign strategy in seconds.
+            <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed font-medium">
+              The AI analyzes your data, explains which segment it chose and why, then generates a tailored campaign.
             </p>
           </div>
 
-          {/* Input Section */}
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-            <div className="flex gap-2 max-w-4xl">
-              <input
-                type="text"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="E.g., 'Increase purchase frequency for VIP customers in the last 30 days'"
-                className="flex-1 px-5 py-3.5 rounded-xl bg-card/50 border border-border/60 hover:border-border text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/30 transition-all duration-300 backdrop-blur-sm"
-              />
-              <button
-                type="submit"
-                disabled={!prompt.trim() || isLoading}
-                className="px-7 py-3.5 rounded-xl bg-gradient-to-r from-accent to-primary text-accent-foreground font-semibold flex items-center gap-2 hover:shadow-lg hover:shadow-accent/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 group"
+          <div className="space-y-6">
+            <form onSubmit={handleSubmit} className="relative group">
+              <div
+                className={`flex gap-3 p-2 rounded-2xl bg-card/60 border-2 transition-all duration-500 backdrop-blur-xl ${
+                  !hasData
+                    ? 'border-dashed border-muted-foreground/30'
+                    : 'border-border/40 group-focus-within:border-accent/50 group-focus-within:shadow-2xl group-focus-within:shadow-accent/10'
+                }`}
               >
-                {isLoading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
-                    <span className="hidden sm:inline">Generating...</span>
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    <span className="hidden sm:inline">Generate</span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      {/* Quick Suggestions */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-accent" />
-          <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Popular starting points
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {quickSuggestions.map((suggestion) => (
-            <button
-              key={suggestion.label}
-              onClick={() => setPrompt(suggestion.label)}
-              className="text-left p-4 rounded-xl bg-card/40 border border-border/60 hover:border-accent/40 hover:bg-card/80 backdrop-blur-sm transition-all duration-300 cursor-pointer group relative overflow-hidden"
-            >
-              {/* Hover glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-              <div className="relative flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="text-2xl mb-2">{suggestion.icon}</div>
-                  <h3 className="font-semibold text-foreground group-hover:text-accent transition-colors duration-200">
-                    {suggestion.label}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1.5">{suggestion.desc}</p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-accent group-hover:translate-x-1 opacity-50 group-hover:opacity-100 transition-all duration-300 flex-shrink-0 mt-1" />
+                <input
+                  type="text"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  disabled={!hasData || busy}
+                  placeholder={hasData ? "E.g., 'Boost weekend sales' or 'Win back inactive customers'" : 'Upload data first...'}
+                  className="flex-1 px-4 py-3 rounded-xl bg-transparent text-foreground placeholder:text-muted-foreground/60 focus:outline-none disabled:cursor-not-allowed font-medium"
+                />
+                <button
+                  type="submit"
+                  disabled={!prompt.trim() || !hasData || busy}
+                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-accent to-primary text-accent-foreground font-bold flex items-center gap-3 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:grayscale transition-all duration-300 shadow-xl shadow-accent/20"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span className="hidden sm:inline">Analyzing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-5 h-5" />
+                      <span className="hidden sm:inline">Analyze Opportunity</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
               </div>
-            </button>
-          ))}
+
+              {error && (
+                <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-bold flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+                  <AlertCircle className="w-4 h-4" />
+                  AI analysis failed: {error}
+                </div>
+              )}
+
+              {!hasData && (
+                <div className="absolute -bottom-10 left-4 flex items-center gap-2 text-warning">
+                  <Database className="w-4 h-4" />
+                  <p className="text-xs font-bold uppercase tracking-wider">Connect customer data to enable analysis</p>
+                </div>
+              )}
+            </form>
+
+            {isGenerating && (
+              <div className="p-8 rounded-2xl bg-background/90 backdrop-blur-xl border border-accent/20 text-center space-y-6 animate-in fade-in">
+                <Loader2 className="w-10 h-10 text-accent animate-spin mx-auto" />
+                <div className="space-y-3">
+                  <h3 className="text-xl font-black text-foreground">
+                    {loadingStage === 'goal' && 'Interpreting your business goal...'}
+                    {loadingStage === 'audience' && 'Building audience strategy...'}
+                    {loadingStage === 'content' && 'Writing email & SMS copy...'}
+                  </h3>
+                  <div className="h-1.5 w-full max-w-xs mx-auto bg-secondary rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-accent transition-all duration-1000"
+                      style={{ width: loadingStage === 'goal' ? '33%' : loadingStage === 'audience' ? '66%' : '100%' }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {!busy && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-px flex-1 bg-border/40" />
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-border/40 bg-card/40">
+              <Sparkles className="w-3.5 h-3.5 text-accent" />
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Try these goals</p>
+            </div>
+            <div className="h-px flex-1 bg-border/40" />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {quickSuggestions.map((suggestion) => (
+              <button
+                key={suggestion.label}
+                onClick={() => setPrompt(suggestion.label)}
+                disabled={!hasData || busy}
+                className="text-left p-4 rounded-xl bg-card/30 border border-border/40 hover:border-accent/40 hover:bg-card/60 transition-all duration-300 group disabled:opacity-50"
+              >
+                <div className="text-xl mb-2">{suggestion.icon}</div>
+                <h3 className="text-xs font-bold text-foreground group-hover:text-accent transition-colors leading-tight">
+                  {suggestion.label}
+                </h3>
+                <p className="text-[10px] text-muted-foreground mt-1">→ {suggestion.segment}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

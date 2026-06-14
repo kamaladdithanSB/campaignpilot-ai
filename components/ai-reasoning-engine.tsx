@@ -1,130 +1,233 @@
 'use client'
 
-import { Brain, Zap, Users, Target, MessageSquare, TrendingUp } from 'lucide-react'
+import { useState } from 'react'
+import {
+  Brain,
+  Zap,
+  Users,
+  Target,
+  MessageSquare,
+  Mail,
+  Smartphone,
+  CheckCircle2,
+  ArrowRight,
+  Copy,
+  Check,
+  DollarSign,
+  TrendingUp,
+} from 'lucide-react'
 
 interface AIReasoningEngineProps {
   onLaunch?: () => void
+  strategy?: {
+    goal?: { output?: { objective?: string; kpis?: string[] }; reasoning?: string }
+    audience?: {
+      output?: {
+        segmentName?: string
+        count?: number
+        criteria?: string
+        expectedRevenue?: number
+        businessImpact?: string
+      }
+      reasoning?: string
+    }
+    content?: {
+      output?: { messages?: { email?: string; sms?: string }; subjectLine?: string }
+      reasoning?: string
+    }
+  }
+  isLaunched?: boolean
 }
 
-export function AIReasoningEngine({ onLaunch }: AIReasoningEngineProps = {}) {
-  const reasoningSteps = [
+export function AIReasoningEngine({ onLaunch, strategy, isLaunched = false }: AIReasoningEngineProps) {
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(id);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  const objective = strategy?.goal?.output?.objective || 'Increase revenue';
+  const goalReasoning = strategy?.goal?.reasoning || 'Analyzing your customer data to find the highest-impact revenue opportunity.';
+  const segmentName = strategy?.audience?.output?.segmentName || 'High Value Customers';
+  const segmentCount = strategy?.audience?.output?.count || 0;
+  const audienceReasoning = strategy?.audience?.reasoning || 'This segment shows the strongest purchase patterns for your goal.';
+  const businessImpact = strategy?.audience?.output?.businessImpact || '';
+  const expectedRevenue = strategy?.audience?.output?.expectedRevenue || 0;
+  const contentReasoning = strategy?.content?.reasoning || 'Messaging tailored to drive action from this segment.';
+  const subjectLine = strategy?.content?.output?.subjectLine || 'Your exclusive offer inside';
+  const emailBody = strategy?.content?.output?.messages?.email || '';
+  const smsBody = strategy?.content?.output?.messages?.sms || '';
+
+  const insights = [
     {
-      icon: Brain,
-      label: 'Goal Interpretation',
-      description: 'Analyzing your business objective to identify the core outcome drivers and key success metrics.',
-      insights: 'Detected: Revenue growth through customer frequency increase',
-      color: 'from-violet-500/20 to-violet-600/10',
-      iconColor: 'text-violet-400',
-    },
-    {
-      icon: Users,
-      label: 'Audience Analysis',
-      description: 'Evaluating your customer base to find the highest-potential segments with behavioral patterns.',
-      insights: '12,450 VIP customers identified • 89% historical response rate',
-      color: 'from-blue-500/20 to-blue-600/10',
-      iconColor: 'text-blue-400',
-    },
-    {
-      icon: MessageSquare,
-      label: 'Message Optimization',
-      description: 'Crafting personalized messaging that resonates with segment psychology and purchase triggers.',
-      insights: 'Personalization detected: +34% CTR improvement vs. standard messaging',
-      color: 'from-cyan-500/20 to-cyan-600/10',
-      iconColor: 'text-cyan-400',
-    },
-    {
+      id: 'opportunity',
       icon: Target,
-      label: 'Channel Selection',
-      description: 'Determining optimal channels based on engagement patterns and segment preferences.',
-      insights: 'Email (92% engagement) + SMS (78% open rate) recommended',
-      color: 'from-emerald-500/20 to-emerald-600/10',
-      iconColor: 'text-emerald-400',
+      title: 'Revenue Opportunity',
+      tag: 'What we found',
+      content: goalReasoning,
+      highlight: objective,
+      metric: { label: 'Goal', value: objective },
     },
     {
-      icon: Zap,
-      label: 'Conversion Prediction',
-      description: 'AI model predicting campaign performance based on historical data and market conditions.',
-      insights: 'Projected conversion rate: 8.2% (290% lift vs. baseline)',
-      color: 'from-orange-500/20 to-orange-600/10',
-      iconColor: 'text-orange-400',
+      id: 'segment',
+      icon: Users,
+      title: 'Why This Segment',
+      tag: 'AI selection',
+      content: audienceReasoning,
+      highlight: segmentName,
+      metric: {
+        label: 'Audience Size',
+        value: segmentCount.toLocaleString(),
+      },
+      impact: businessImpact,
+      expectedRevenue,
     },
     {
-      icon: TrendingUp,
-      label: 'Revenue Impact',
-      description: 'Estimating financial impact and ROI based on predicted conversions and average order value.',
-      insights: 'Estimated revenue: $287,450 • Confidence: 94%',
-      color: 'from-pink-500/20 to-pink-600/10',
-      iconColor: 'text-pink-400',
+      id: 'content',
+      icon: MessageSquare,
+      title: 'Campaign Messaging',
+      tag: 'What customers will receive',
+      content: contentReasoning,
+      highlight: 'Email + SMS ready',
+      metric: { label: 'Channels', value: 'Email & SMS' },
     },
-  ]
+  ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">AI Reasoning Engine</h2>
-        <p className="text-muted-foreground mt-1.5 text-sm">See how CampaignPilot&apos;s neural network analyzes your goals</p>
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-6 border-b border-border/40">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30 text-accent">
+              <Brain className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-black text-accent uppercase tracking-widest">AI Revenue Copilot</span>
+          </div>
+          <h2 className="text-4xl font-black text-foreground tracking-tighter">Your Campaign, Explained</h2>
+          <p className="text-xl text-muted-foreground font-medium max-w-2xl">
+            Here is what the AI found in your data, why it chose this segment, and what message will be sent.
+          </p>
+        </div>
+
+        {!isLaunched ? (
+          <button
+            onClick={onLaunch}
+            className="px-12 py-5 rounded-3xl bg-foreground text-background font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-2xl flex items-center gap-4 group"
+          >
+            <Zap className="w-6 h-6 fill-current group-hover:rotate-12 transition-transform" />
+            Launch Campaign
+            <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+          </button>
+        ) : (
+          <div className="flex items-center gap-4 px-8 py-5 rounded-2xl bg-success/10 border border-success/30 text-success font-black uppercase tracking-widest">
+            <CheckCircle2 className="w-7 h-7" />
+            Campaign Live
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {reasoningSteps.map((step) => {
-          const Icon = step.icon
+      <div className="grid grid-cols-1 gap-6">
+        {insights.map((insight) => {
+          const Icon = insight.icon;
           return (
             <div
-              key={step.label}
-              className={`relative rounded-xl border border-border/60 bg-gradient-to-br from-card to-card/80 p-6 overflow-hidden transition-all duration-300 group hover:border-border hover:shadow-lg hover:shadow-accent/5`}
+              key={insight.id}
+              className="rounded-[32px] border border-border/40 bg-card/40 p-10 space-y-6 hover:border-accent/30 transition-all"
             >
-              {/* Gradient background effect */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${step.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-              <div className="absolute bottom-0 left-0 h-1 w-0 group-hover:w-full bg-gradient-to-r from-transparent via-accent/30 to-transparent transition-all duration-300" />
-
-              <div className="relative z-10 space-y-4">
-                {/* Header with icon and step number */}
-                <div className="flex items-start justify-between">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${step.color} border border-border/40 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className={`w-6 h-6 ${step.iconColor}`} />
+              <div className="flex items-start justify-between gap-6">
+                <div className="flex items-center gap-6">
+                  <div className="w-16 h-16 rounded-2xl bg-accent/10 text-accent flex items-center justify-center">
+                    <Icon className="w-8 h-8" />
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-bold">
-                    Neural Step
-                  </span>
-                </div>
-
-                {/* Content */}
-                <div className="space-y-3">
                   <div>
-                    <h3 className="text-base font-bold text-foreground">{step.label}</h3>
-                    <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{step.description}</p>
+                    <span className="text-[10px] font-black text-accent uppercase tracking-[0.2em]">{insight.tag}</span>
+                    <h3 className="text-2xl font-black text-foreground tracking-tight mt-1">{insight.title}</h3>
                   </div>
-
-                  {/* Insights box */}
-                  <div className="p-3 rounded-lg bg-accent/5 border border-accent/20">
-                    <p className="text-xs font-semibold text-accent">{step.insights}</p>
-                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{insight.metric.label}</p>
+                  <p className="text-lg font-black text-foreground">{insight.metric.value}</p>
                 </div>
               </div>
+
+              <p className="text-lg text-foreground/90 leading-relaxed font-medium">{insight.content}</p>
+
+              {insight.id === 'segment' && expectedRevenue > 0 && (
+                <div className="flex items-center gap-4 p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                  <TrendingUp className="w-6 h-6 text-emerald-400" />
+                  <div>
+                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Expected Business Impact</p>
+                    <p className="text-lg font-bold text-foreground">
+                      {insight.impact || `~$${expectedRevenue.toLocaleString()} projected incremental revenue`}
+                    </p>
+                  </div>
+                  <DollarSign className="w-8 h-8 text-emerald-400/40 ml-auto" />
+                </div>
+              )}
             </div>
-          )
+          );
         })}
       </div>
 
-      {/* Summary insight */}
-      <div className="relative rounded-xl border border-border/60 bg-gradient-to-r from-accent/5 via-primary/3 to-background p-6 overflow-hidden">
-        <div className="absolute -right-40 -top-40 w-80 h-80 bg-accent/10 rounded-full blur-3xl opacity-40" />
-        <div className="relative z-10 space-y-3">
-          <div className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-accent" />
-            <p className="font-bold text-foreground text-sm uppercase tracking-wider">AI Conclusion</p>
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 text-accent">
+          <Mail className="w-5 h-5" />
+          <span className="text-xs font-black uppercase tracking-[0.2em]">Generated Campaign Assets — Ready to Send</span>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="bg-card/40 border border-border/60 rounded-3xl p-8 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <span className="text-sm font-black uppercase tracking-widest">Email</span>
+              </div>
+              <button
+                onClick={() => handleCopy(`Subject: ${subjectLine}\n\n${emailBody}`, 'email')}
+                className="p-2 rounded-lg hover:bg-secondary transition-colors flex items-center gap-2 text-xs font-bold text-muted-foreground"
+              >
+                {copied === 'email' ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
+                Copy
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Subject Line</p>
+                <p className="font-bold text-foreground text-lg">{subjectLine}</p>
+              </div>
+              <div className="p-6 rounded-2xl bg-secondary/30 text-sm text-foreground/80 leading-relaxed whitespace-pre-line">
+                {emailBody}
+              </div>
+            </div>
           </div>
-          <p className="text-foreground leading-relaxed">
-            The AI engine recommends launching this campaign immediately. With 94% confidence, this strategy will outperform your baseline by 290%. The combination of precise audience targeting, personalized messaging, and optimal channel mix creates a powerful conversion vector.
-          </p>
-          <button
-            onClick={onLaunch}
-            className="mt-4 px-6 py-2.5 rounded-lg bg-gradient-to-r from-accent to-primary text-accent-foreground font-semibold hover:shadow-lg hover:shadow-accent/20 transition-all duration-300"
-          >
-            Launch Strategy
-          </button>
+
+          <div className="bg-card/40 border border-border/60 rounded-3xl p-8 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                  <Smartphone className="w-5 h-5" />
+                </div>
+                <span className="text-sm font-black uppercase tracking-widest">SMS</span>
+              </div>
+              <button
+                onClick={() => handleCopy(smsBody, 'sms')}
+                className="p-2 rounded-lg hover:bg-secondary transition-colors flex items-center gap-2 text-xs font-bold text-muted-foreground"
+              >
+                {copied === 'sms' ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
+                Copy
+              </button>
+            </div>
+            <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 text-sm font-medium text-foreground leading-relaxed">
+              {smsBody}
+            </div>
+            <p className="text-[10px] text-muted-foreground">{smsBody.length}/160 characters</p>
+          </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
