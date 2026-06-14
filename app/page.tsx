@@ -73,7 +73,7 @@ export default function Dashboard() {
 
   const pollStatus = useCallback(async () => {
     if (!campaignId) return
-    console.log('DEBUG: pollStatus - polling status for campaign', { campaignId, campaignStatus, currentStep })
+    console.log('DEBUG: pollStatus - polling status for campaign', { campaignId })
     try {
       const res = await fetch(`${apiBaseUrl}/api/campaigns/status?id=${campaignId}`)
       const data = await res.json()
@@ -111,7 +111,7 @@ export default function Dashboard() {
     } catch (e) {
       console.error('Polling error', e)
     }
-  }, [apiBaseUrl, campaignId, campaignStatus, currentStep])
+  }, [apiBaseUrl, campaignId])
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>
@@ -127,8 +127,8 @@ export default function Dashboard() {
   }, [campaignId, campaignStatus, pollStatus])
 
   useEffect(() => {
-    if (backendComplete && currentStep === 4) {
-      console.log('DEBUG: completion effect - switching to ROI because backendComplete is true')
+    if (backendComplete && currentStep !== 5) {
+      console.log('DEBUG: completion effect - forcing ROI because backendComplete is true')
       setCurrentStep(5)
     }
   }, [backendComplete, currentStep])
@@ -230,6 +230,13 @@ export default function Dashboard() {
       console.error('Launch failed', e)
     }
   }
+
+  const handleSimulationComplete = useCallback(() => {
+    setSimulationComplete(true)
+    setTimeout(() => {
+      setBackendComplete((current) => current || true)
+    }, 500)
+  }, [])
 
   const strategy = currentStrategy as {
     goal?: { output?: { objective?: string; userPrompt?: string }; reasoning?: string }
@@ -414,12 +421,7 @@ export default function Dashboard() {
               audienceSize={audienceSize}
               expectedRevenue={expectedRevenue}
               avgOrderValue={dataAnalysis?.averageOrderValueRaw || 45}
-              onSimulationComplete={() => {
-                setSimulationComplete(true)
-                if (!backendComplete) {
-                  setTimeout(() => setBackendComplete(true), 500)
-                }
-              }}
+              onSimulationComplete={handleSimulationComplete}
             />
           </section>
         )}
