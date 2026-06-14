@@ -99,13 +99,14 @@ export function ExecutiveDashboard({ metrics, strategy, segments = [] }: Executi
   const conversionMultiplier = isWinBack ? 1.45 : isWeekend ? 1.35 : isPremium ? 1.22 : isCrossSell ? 1.3 : 1.28
   const projectedConversions = Math.max(Math.round(baselineConversions * conversionMultiplier), baselineConversions + 1)
   const projectedRetention = Math.min(78, baselineRetention + (isWinBack ? 12 : isWeekend ? 9 : isPremium ? 14 : isCrossSell ? 11 : 10))
-  const projectedRevenue = expectedRevenue > 0 ? expectedRevenue : Math.round(projectedConversions * averageSpend * (isPremium ? 1.18 : 1.08))
+  const projectedRevenueLift = expectedRevenue > 0 ? expectedRevenue : Math.round(projectedConversions * averageSpend * (isPremium ? 1.18 : 1.08))
+  const totalRevenueAfterCampaign = baselineRevenue + projectedRevenueLift
   const campaignCost = Math.max(Math.round(audienceCount * (isPremium ? 0.18 : isWinBack ? 0.14 : isWeekend ? 0.11 : isCrossSell ? 0.13 : 0.12)), 350)
-  const profit = Math.max(projectedRevenue - campaignCost, 0)
+  const profit = Math.max(projectedRevenueLift - campaignCost, 0)
   const roi = campaignCost > 0 ? Math.round((profit / campaignCost) * 100) : 0
   const conversionLift = Math.max(Math.round(((projectedConversions - baselineConversions) / Math.max(baselineConversions, 1)) * 100), 10)
   const clvImpact = Math.round(averageSpend * (isPremium ? 1.22 : 1.15))
-  const totalRevenue = metrics?.revenue && metrics.revenue > 0 ? metrics.revenue : projectedRevenue
+  const totalRevenue = baselineRevenue
   const openRate = metrics?.sent ? ((metrics.opened || Math.round(metrics.sent * 0.42)) / metrics.sent * 100).toFixed(1) : '42.0'
   const clickRate = metrics?.sent ? ((metrics.clicked || Math.round(metrics.sent * 0.15)) / metrics.sent * 100).toFixed(1) : '15.0'
   const sent = metrics?.sent || audienceCount
@@ -114,28 +115,28 @@ export function ExecutiveDashboard({ metrics, strategy, segments = [] }: Executi
     {
       label: 'Before campaign',
       before: baselineRevenue,
-      after: Math.round(baselineRevenue * 0.92),
+      after: baselineRevenue + Math.round(projectedRevenueLift * 0.18),
       conversionsBefore: baselineConversions,
-      conversionsAfter: Math.max(Math.round(baselineConversions * 0.88), baselineConversions),
+      conversionsAfter: Math.max(Math.round(baselineConversions * 1.02), baselineConversions),
     },
     {
       label: 'Launch phase',
       before: Math.round(baselineRevenue * 1.02),
-      after: Math.round(projectedRevenue * 0.72),
+      after: baselineRevenue + Math.round(projectedRevenueLift * 0.42),
       conversionsBefore: Math.round(baselineConversions * 1.03),
       conversionsAfter: Math.round(projectedConversions * 0.75),
     },
     {
       label: 'Optimization',
       before: Math.round(baselineRevenue * 1.08),
-      after: Math.round(projectedRevenue * 0.9),
+      after: baselineRevenue + Math.round(projectedRevenueLift * 0.72),
       conversionsBefore: Math.round(baselineConversions * 1.06),
       conversionsAfter: Math.round(projectedConversions * 0.88),
     },
     {
       label: 'Business impact',
       before: baselineRevenue,
-      after: projectedRevenue,
+      after: totalRevenueAfterCampaign,
       conversionsBefore: baselineConversions,
       conversionsAfter: projectedConversions,
     },
@@ -143,7 +144,7 @@ export function ExecutiveDashboard({ metrics, strategy, segments = [] }: Executi
 
   useEffect(() => {
     const target = {
-      revenue: projectedRevenue,
+      revenue: totalRevenueAfterCampaign,
       roi,
       customers: audienceCount,
       lift: conversionLift,
@@ -167,9 +168,9 @@ export function ExecutiveDashboard({ metrics, strategy, segments = [] }: Executi
     }
 
     requestAnimationFrame(animate)
-  }, [projectedRevenue, roi, audienceCount, conversionLift])
+  }, [totalRevenueAfterCampaign, roi, audienceCount, conversionLift])
 
-  const beatTarget = expectedRevenue > 0 && totalRevenue >= expectedRevenue * 0.9
+  const beatTarget = expectedRevenue > 0 && totalRevenueAfterCampaign >= expectedRevenue * 0.9
 
   return (
     <div className={`space-y-10 transition-all duration-1000 ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
@@ -188,10 +189,10 @@ export function ExecutiveDashboard({ metrics, strategy, segments = [] }: Executi
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { label: 'Projected Revenue', value: `$${animatedValues.revenue.toLocaleString()}` },
-                { label: 'ROI', value: `${animatedValues.roi}%` },
-                { label: 'Customers reached', value: animatedValues.customers.toLocaleString() },
-                { label: 'Conversion lift', value: `${animatedValues.lift}%` },
+                { label: 'Baseline revenue', value: `$${baselineRevenue.toLocaleString()}` },
+                { label: 'Projected lift', value: `+$${projectedRevenueLift.toLocaleString()}` },
+                { label: 'After campaign revenue', value: `$${totalRevenueAfterCampaign.toLocaleString()}` },
+                { label: 'ROI', value: `${roi}%` },
               ].map((stat) => (
                 <div key={stat.label} className="rounded-[28px] border border-border/40 bg-background/80 p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl">
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">{stat.label}</p>
@@ -227,7 +228,19 @@ export function ExecutiveDashboard({ metrics, strategy, segments = [] }: Executi
                 <CartesianGrid strokeDasharray="4 4" strokeOpacity={0.12} vertical={false} />
                 <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: 'rgba(148,163,184,0.9)', fontSize: 13 }} />
                 <YAxis tickLine={false} axisLine={false} tick={{ fill: 'rgba(148,163,184,0.9)', fontSize: 13 }} />
-                <Tooltip formatter={(value: number) => new Intl.NumberFormat('en-US', { style: 'decimal' }).format(value)} contentStyle={{ borderRadius: 20, border: '1px solid rgba(148,163,184,0.12)', background: 'rgba(15,23,42,0.96)', color: '#f8fafc' }} />
+                <Tooltip
+                  formatter={(value) =>
+                    typeof value === 'number'
+                      ? new Intl.NumberFormat('en-US', { style: 'decimal' }).format(value)
+                      : value
+                  }
+                  contentStyle={{
+                    borderRadius: 20,
+                    border: '1px solid rgba(148,163,184,0.12)',
+                    background: 'rgba(15,23,42,0.96)',
+                    color: '#f8fafc',
+                  }}
+                />
                 <Legend wrapperStyle={{ color: '#94A3B8', fontSize: 13 }} />
                 <Area type="monotone" dataKey="before" name="Before campaign" stroke="#2563eb" strokeWidth={3} fill="url(#beforeGradient)" dot={false} activeDot={{ r: 6, fill: '#2563eb' }} animationDuration={1200} />
                 <Area type="monotone" dataKey="after" name="After campaign" stroke="#ec4899" strokeWidth={3} fill="url(#afterGradient)" dot={false} activeDot={{ r: 6, fill: '#ec4899' }} animationDuration={1400} animationEasing="ease-out" />
@@ -300,7 +313,7 @@ export function ExecutiveDashboard({ metrics, strategy, segments = [] }: Executi
           </div>
           <div className="rounded-3xl bg-background/80 p-6">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">Impact</p>
-            <p className="mt-3 text-base leading-7 text-muted-foreground">Projected revenue of ${projectedRevenue.toLocaleString()} with ${roi}% ROI and clear retention upside.</p>
+            <p className="mt-3 text-base leading-7 text-muted-foreground">Projected revenue of ${totalRevenueAfterCampaign.toLocaleString()} with ${roi}% ROI and clear retention upside.</p>
           </div>
         </div>
       </section>
