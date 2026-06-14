@@ -47,6 +47,7 @@ export default function Dashboard() {
     revenue: number
     lastSync: string
   } | null>(null)
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '') || ''
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
@@ -72,13 +73,20 @@ export default function Dashboard() {
 
   const pollStatus = useCallback(async () => {
     if (!campaignId) return
+    console.log('DEBUG: pollStatus - polling status for campaign', { campaignId, campaignStatus, currentStep })
     try {
-      const res = await fetch(`/api/campaigns/status?id=${campaignId}`)
+      const res = await fetch(`${apiBaseUrl}/api/campaigns/status?id=${campaignId}`)
       const data = await res.json()
+      console.log('DEBUG: pollStatus - response', data)
+
       if (data.status) {
         const status = data.status.toLowerCase()
+        console.log('DEBUG: pollStatus - status parsed', status)
         setCampaignStatus(status)
-        if (data.metrics) setMetrics(data.metrics)
+        if (data.metrics) {
+          setMetrics(data.metrics)
+          console.log('DEBUG: pollStatus - metrics updated', data.metrics)
+        }
 
         if (data.strategy && typeof data.strategy === 'string') {
           try {
@@ -91,30 +99,39 @@ export default function Dashboard() {
         }
 
         if (status === 'executing' || status === 'queued') {
-          if (currentStep < 4) setCurrentStep(4)
+          setCurrentStep((prevStep) => Math.max(prevStep, 4))
         }
+
         if (status === 'completed') {
+          console.log('DEBUG: pollStatus - backend reports completed')
           setBackendComplete(true)
+          setCurrentStep(5)
         }
       }
     } catch (e) {
       console.error('Polling error', e)
     }
-  }, [campaignId, currentStep])
+  }, [apiBaseUrl, campaignId, campaignStatus, currentStep])
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>
-    if (campaignId && (campaignStatus === 'queued' || campaignStatus === 'executing')) {
+    if (campaignId && campaignStatus !== 'completed') {
+      console.log('DEBUG: polling effect - starting poll interval', { campaignId, campaignStatus })
       interval = setInterval(pollStatus, 1500)
+      pollStatus().catch((e) => console.error('DEBUG: initial poll failed', e))
     }
-    return () => clearInterval(interval)
+    return () => {
+      console.log('DEBUG: polling effect - clearing poll interval', { campaignId, campaignStatus })
+      clearInterval(interval)
+    }
   }, [campaignId, campaignStatus, pollStatus])
 
   useEffect(() => {
-    if (simulationComplete && backendComplete && currentStep === 4) {
+    if (backendComplete && currentStep === 4) {
+      console.log('DEBUG: completion effect - switching to ROI because backendComplete is true')
       setCurrentStep(5)
     }
-  }, [simulationComplete, backendComplete, currentStep])
+  }, [backendComplete, currentStep])
 
   const handleAnalyze = async (prompt: string) => {
     console.log("DEBUG: handleAnalyze - Starting analysis for:", prompt);
@@ -125,7 +142,7 @@ export default function Dashboard() {
 
     try {
       console.log("DEBUG: handleAnalyze - Fetching /api/campaigns/preview...");
-      const res = await fetch('/api/campaigns/preview', {
+      const res = await fetch(`${apiBaseUrl}/api/campaigns/preview`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt }),
@@ -163,7 +180,7 @@ export default function Dashboard() {
     const progressTimer2 = setTimeout(() => setLoadingStage('content'), 5500)
 
     try {
-      const res = await fetch('/api/campaigns/generate', {
+      const res = await fetch(`${apiBaseUrl}/api/campaigns/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: savedPrompt }),
@@ -202,7 +219,7 @@ export default function Dashboard() {
     }, 100)
 
     try {
-      const res = await fetch('/api/campaigns/launch', {
+      const res = await fetch(`${apiBaseUrl}/api/campaigns/launch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ campaignId }),
