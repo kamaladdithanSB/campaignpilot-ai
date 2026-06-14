@@ -304,9 +304,7 @@ The platform moves beyond reporting and becomes an intelligent decision-making p
 
 [https://campaignpilot-ai.vercel.app/]
 
-### Walkthrough Video
 
-[Add Video URL]
 
 ---
 
